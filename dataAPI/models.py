@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Interval, DateTime, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, Interval, DateTime, Text, Float
 from dataAPI.db_connection import Base
 
 from datetime import datetime
@@ -39,3 +39,13 @@ class WorkLogChangeLog(Base):
     prev_time_spent = Column(Interval, nullable=False)
     new_time_spent = Column(Interval, nullable=True)
     ticket_id = Column(Integer, ForeignKey('ticket.id'), nullable=False)
+
+class Employee(Base):
+    __tablename__ = "employee"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(120), nullable=False)
+    role = Column(String(120), nullable=False)
+    rate_card_description = Column(String(120), nullable=False)
+    hours_pw = Column(Float, nullable=False)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=True)

@@ -13,7 +13,7 @@ LOG = logging.getLogger("uvicorn.access")
 
 
 def get_issue(issue_key):
-    file = "config.json"
+    file = "/Users/tcee/Documents/code/jira-app/config.json"
     config = json.load(open(file))
 
     jira = JIRA(
@@ -57,24 +57,22 @@ def fetch_jira_data(project):
         basic_auth=(config['user'], config['password'])
     )
 
-    def get_all_epics(jira_client, project_name, fields):
-        issues = []
-        i = 0
-        chunk_size = 100
-        #while True:
-        chunk = jira_client.search_issues(f'issuetype=Epic', startAt=i, maxResults=0)
-            # i += chunk_size
-        issues += chunk.iterable
-            # if i >= chunk.total:
-            #     break
-        print(len(issues))
-        return issues
+    def get_all_epics(project_name):
+        issues = jira.search_issues(f'issuetype=Epic AND project={project_name}', maxResults=0)
+        print(f'Epics in Project {project_name}: {len(issues)}')
+        return issues if issues is not None else []
 
-    epics = cast(ResultList[Issue], get_all_epics(jira, project, ["id", "fixVersion"]))
+    def get_issues_not_in_epics(project_name):
+        issues = jira.search_issues(f'(issueType=Sub-task OR issueType=Story OR issueType=Task or issueType=Bug) AND parent is empty AND project={project_name}')
+        print(f'Loose Issues in Project {project_name}: {len(issues)}')
+        return issues if issues is not None else []
+
+    epics = cast(ResultList[Issue], get_all_epics(project))
+    loose_issues = cast(ResultList[Issue], get_issues_not_in_epics(project))
     cleaned_issues = []
     cleaned_worklogs = []
 
-    for i in epics:
+    for i in epics+loose_issues:
         if hasattr(i.fields,'parent') and i.fields.parent is not None:
             parent_id = i.fields.parent.id
         else:
@@ -135,13 +133,6 @@ def fetch_jira_data(project):
             # print("    time spent: %s",w.raw['timeSpentSeconds'])
             # print("    work description: %s",w.raw['comment'] if 'comment' in w.raw else None)
         #print("links: ",i.fields.issuelinks)
-
-
-        # if len (i.fields.issuelinks) > 0 :
-        #     for l in i.fields.issuelinks:
-        #         print("    link:", l.raw))
-        #print("timetracking: %s",str(cast(TimeTracking,i.fields.timetracking).raw))
-
         #print("________")
         children = jira.search_issues(f'parent={i.key}', maxResults=0)
         for c in children:
