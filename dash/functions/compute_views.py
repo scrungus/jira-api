@@ -8,38 +8,43 @@ def compute_graph(worklogs,employees):
         worklogs = pd.read_json(worklogs)
         employees = pd.read_json(employees)
 
-        grouped_data = worklogs.groupby('weekstarted')['time_hours'].sum()
+        if worklogs.size > 0:
 
-        week = grouped_data.index
-        hours = grouped_data.values
+            grouped_data = worklogs.groupby('weekstarted')['time_hours'].sum()
 
-        def percent_total_hours(date, percent):
-            
-            #filter total hours for given week by checking that date lies within the start and end dates of employees
-            mask = (employees['start_date'] <= date) & ((employees['end_date'].isna()) | (employees['end_date'] >= date))
+            week = grouped_data.index
+            hours = grouped_data.values
 
-            #print("DATE:",date)
-            #print("Employees counted:")
-            #print(self.employees[mask])
+            def percent_total_hours(date, percent):
+                
+                #filter total hours for given week by checking that date lies within the start and end dates of employees
+                mask = (employees['start_date'] <= date) & ((employees['end_date'].isna()) | (employees['end_date'] >= date))
 
-            percent_total_hours = employees[mask]['hours_pw'].sum()*percent
+                #print("DATE:",date)
+                #print("Employees counted:")
+                #print(self.employees[mask])
 
-            return percent_total_hours
+                percent_total_hours = employees[mask]['hours_pw'].sum()*percent
 
-        PX_WHRS = 0.8
+                return percent_total_hours
 
-        grouped_data['percent_total_hours'] = grouped_data.index.map( lambda date: percent_total_hours(date, PX_WHRS) )
+            PX_WHRS = 0.8
 
-        #print(grouped_data)
+            grouped_data['percent_total_hours'] = grouped_data.index.map( lambda date: percent_total_hours(date, PX_WHRS) )
 
-        fig = px.line(x=week, y=grouped_data['percent_total_hours'], color=px.Constant(f"{PX_WHRS*100:.0f}% Working Hours"))
-        fig.add_bar(x=week, y=hours, name="Actual Logged Hours")
+            #print(grouped_data)
 
-    fig.update_layout(
-        template="plotly_dark",
-        title=dict(text="Hours Logged Per Week", font=dict(size=20), automargin=True, yref='container'),
-        xaxis_title="Hours",
-        yaxis_title="Weeks",
-    )
+            fig = px.line(x=week, y=grouped_data['percent_total_hours'], color=px.Constant(f"{PX_WHRS*100:.0f}% Working Hours"))
+            fig.add_bar(x=week, y=hours, name="Actual Logged Hours")
+
+            fig.update_layout(
+                template="plotly_dark",
+                xaxis_title="Weeks",
+                yaxis_title="Hours",
+            )
+        else: 
+            fig.update_layout(template = None)
+            fig.update_xaxes(showgrid = False, showticklabels = False, zeroline=False)
+            fig.update_yaxes(showgrid = False, showticklabels = False, zeroline=False)
 
     return fig
