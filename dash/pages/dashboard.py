@@ -31,27 +31,42 @@ histogram = html.Section(
 
 main_panel = html.Section(
     id="root",
-    className="hero is-fullheight is-light is-flex",
+    className="hero is-fullheight is-light is-flex is-flex-direction-column",
     children=[
+        html.Meta(name="viewport", content="width=device-width, initial-scale=1"),
+        html.Div(
+            className="hero-head",
+            children=[
+                html.Div(
+                    className="container",
+                    children=[
+                        html.H1(
+                            className='title', 
+                            children='Jira Work Log Data', 
+                            style={'textAlign':'center'})
+                    ]
+                )
+            ]
+        ),
         html.Div(
             className="hero-body",
             children=[
-                html.Meta(name="viewport", content="width=device-width, initial-scale=1"),
                 html.Div(
-                    className="hero-head",
-                    children=[html.H1(children='Jira Work Log Data', className='title', style={'textAlign':'center'})]
-                ),
-                dcc.DatePickerRange(
-                    id='jira-data-filter',
-                    min_date_allowed=date(2019, 1, 1),
-                    start_date=date.today().replace(day=1),
-                    end_date=date.today()
-                ),
-                histogram,
-                dcc.Store(id='worklogs'),
-                dcc.Store(id='employees')
+                    className="container",
+                    children=[
+                        dcc.DatePickerRange(
+                            id='jira-data-filter',
+                            min_date_allowed=date(2019, 1, 1),
+                            start_date=date.today().replace(day=1),
+                            end_date=date.today()
+                        ),
+                        histogram,
+                    ]
+                )
             ]
-        )
+        ),
+        dcc.Store(id='worklogs'),
+        dcc.Store(id='employees')
     ],
     style = {
         'width': '100%',
