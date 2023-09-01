@@ -24,8 +24,4 @@ def get_data(start_date, end_date):
 
     employees = pd.read_sql(db.query(models.Employee).statement,db.bind)
 
-    print(employees)
-    print("TOJASON!!")
-    print(pd.read_json(employees.to_json(date_format='iso')))
-
     return worklogs.to_json(), employees.to_json(date_format='iso')
