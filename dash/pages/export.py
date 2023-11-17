@@ -1,18 +1,19 @@
 import dash
-from dash import html, callback, Output, Input, dcc, State
+from dash import html, callback, CeleryManager, Output, Input, dcc, State
 from datetime import date
 from common.sidebar import get_sidebar
 import time
 import os 
-
+import logging
 dash.register_page(__name__, path='/export')
 
-if 'REDIS_URL' in os.environ:
-    # Use Redis & Celery if REDIS_URL set as an env variable
-    from celery import Celery
-    print(os.environ['REDIS_URL'])
-    celery_app = Celery(__name__, broker=os.environ['REDIS_URL'], backend=os.environ['REDIS_URL'])
-    background_callback_manager = CeleryManager(celery_app)
+REDIS_URL = "redis://127.0.0.1:6379"
+#if 'REDIS_URL' in os.environ:
+# Use Redis & Celery if REDIS_URL set as an env variable
+from celery import Celery
+#print(os.environ['REDIS_URL'])
+celery_app = Celery(__name__, broker=REDIS_URL, backend=REDIS_URL)
+background_callback_manager = CeleryManager(celery_app)
 
 main_panel = html.Section(
     id="root",
@@ -74,7 +75,8 @@ main_panel = html.Section(
                             children=["Export"]
                         )
                     ]
-                ),   
+                ),
+                html.Div([html.P(id="paragraph_id", children=["Button not clicked"])]),   
             ]
         ),
     ],
@@ -95,22 +97,18 @@ layout = html.Div(
             className='column is-flex',
             children=[main_panel]
         ),
-        html.P(id='placeholder')
     ],
 )
 
 @callback(
-    Output('placeholder','children'),
-    
-    Input('export-button','n_clicks'),
-
-    State('jira-data-filter','start_date'),
-    State('jira-data-filter','end_date'),
-
+    output=Output("paragraph_id", "children"), 
+    inputs=Input('export-button','n_clicks'),
+    state=[State('jira-data-filter','start_date'),
+    State('jira-data-filter','end_date')],
     prevent_initial_call=True,
-    background=True
+    background=True,
+    manager=background_callback_manager,
 )
 def export_jira_data(n_clicks, start_date, end_date):
     time.sleep(2.0)
-    print()
-    print(f'you are exporting the range {start_date} - {end_date}')
+    return [f'you are exporting the range {start_date} - {end_date}']
